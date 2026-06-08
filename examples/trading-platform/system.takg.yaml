@@ -1,0 +1,12 @@
+takg:
+  spec_version: "0.4.0"
+  package_id: "trading-platform"
+  name: "Trading Platform"
+entities:
+  - id: ent-example-system
+    name: "Trading Platform"
+    kind: SoftwareSystem
+    plane: software
+    layer: software-logical
+relationships: []
+views: []

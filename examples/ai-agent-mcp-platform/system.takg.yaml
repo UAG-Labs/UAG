@@ -1,0 +1,12 @@
+takg:
+  spec_version: "0.4.0"
+  package_id: "ai-agent-mcp-platform"
+  name: "AI Agent MCP Platform"
+entities:
+  - id: ent-example-system
+    name: "AI Agent MCP Platform"
+    kind: SoftwareSystem
+    plane: software
+    layer: software-logical
+relationships: []
+views: []

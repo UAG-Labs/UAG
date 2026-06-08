@@ -1,0 +1,15 @@
+uagl:
+  spec_version: "0.4.0"
+  package_id: "low-level-os-driver"
+  name: "Low-Level OS Driver"
+ontology:
+  dialects: [core]
+entities:
+  - id: ent-example-system
+    name: "Low-Level OS Driver"
+    kind: SoftwareSystem
+    plane: software
+    layer: software-logical
+relationships: []
+validation:
+  status: example
