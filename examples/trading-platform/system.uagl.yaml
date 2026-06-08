@@ -1,15 +1,69 @@
 uagl:
   spec_version: "0.4.0"
   package_id: "trading-platform"
+  namespace: "examples.trading"
   name: "Trading Platform"
-ontology:
-  dialects: [core]
+  dialects: [core, event-systems-draft]
 entities:
-  - id: ent-example-system
-    name: "Trading Platform"
-    kind: SoftwareSystem
+  - id: ent-order-api
+    name: "Order API"
+    kind: Service
     plane: software
-    layer: software-logical
-relationships: []
+    layer: application
+  - id: ent-risk-engine
+    name: "Risk Engine"
+    kind: Service
+    plane: software
+    layer: domain
+  - id: ent-market-data
+    name: "Market Data Stream"
+    kind: EventStream
+    plane: data
+    layer: integration
+  - id: ent-order-book
+    name: "Order Book"
+    kind: DataStore
+    plane: data
+    layer: persistence
+  - id: ent-exchange-gateway
+    name: "Exchange Gateway"
+    kind: ExternalSystem
+    plane: software
+    layer: integration
+relationships:
+  - id: rel-order-risk
+    source: ent-order-api
+    target: ent-risk-engine
+    kind: validates
+    mode: sync
+    protocol: grpc
+  - id: rel-risk-market-data
+    source: ent-risk-engine
+    target: ent-market-data
+    kind: subscribes
+    mode: async
+    protocol: kafka
+  - id: rel-order-book
+    source: ent-order-api
+    target: ent-order-book
+    kind: writes
+    mode: sync
+    protocol: postgres
+  - id: rel-exchange-submit
+    source: ent-order-api
+    target: ent-exchange-gateway
+    kind: submits
+    mode: async
+    protocol: fix
+views:
+  - id: view-order-flow
+    name: "Order flow"
+    includes: [flow-place-order, rel-order-risk, rel-order-book, rel-exchange-submit]
+source_maps:
+  - source_file: system.takg.yaml
+    source_path: $.relationships[0]
+    compiled_object: rel-order-risk
+    transform_stage: lower
 validation:
-  status: example
+  diagnostics: []
+  loss_reports: []

@@ -1,15 +1,58 @@
 uagl:
   spec_version: "0.4.0"
   package_id: "ai-agent-mcp-platform"
+  namespace: "examples.ai_agent_mcp"
   name: "AI Agent MCP Platform"
-ontology:
-  dialects: [core]
+  dialects: [core, ai-agent-draft]
 entities:
-  - id: ent-example-system
-    name: "AI Agent MCP Platform"
-    kind: SoftwareSystem
+  - id: ent-agent-orchestrator
+    name: "Agent Orchestrator"
+    kind: Service
     plane: software
-    layer: software-logical
-relationships: []
+    layer: application
+  - id: ent-model-gateway
+    name: "Model Gateway"
+    kind: Service
+    plane: software
+    layer: application
+  - id: ent-tool-registry
+    name: "Tool Registry"
+    kind: Registry
+    plane: software
+    layer: application
+  - id: ent-filesystem-tool
+    name: "Filesystem MCP Tool"
+    kind: Tool
+    plane: software
+    layer: integration
+relationships:
+  - id: rel-agent-model
+    source: ent-agent-orchestrator
+    target: ent-model-gateway
+    kind: invokes
+    mode: sync
+    protocol: https
+  - id: rel-agent-tools
+    source: ent-agent-orchestrator
+    target: ent-tool-registry
+    kind: discovers
+    mode: sync
+    protocol: mcp
+  - id: rel-agent-filesystem
+    source: ent-agent-orchestrator
+    target: ent-filesystem-tool
+    kind: invokes
+    mode: sync
+    protocol: mcp
+views:
+  - id: view-agent-context
+    name: "Agent platform context"
+    includes: [ent-agent-orchestrator, ent-model-gateway, ent-tool-registry, ent-filesystem-tool, rel-agent-model, rel-agent-tools, rel-agent-filesystem]
+source_maps:
+  - source_file: system.takg.yaml
+    source_path: $.entities[0]
+    compiled_object: ent-agent-orchestrator
+    transform_stage: lower
 validation:
-  status: example
+  diagnostics: []
+  loss_reports: []

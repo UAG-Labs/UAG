@@ -1,15 +1,58 @@
 uagl:
   spec_version: "0.4.0"
   package_id: "enterprise-system"
+  namespace: "examples.enterprise"
   name: "Enterprise System"
-ontology:
-  dialects: [core]
+  dialects: [core, enterprise-draft]
 entities:
-  - id: ent-example-system
-    name: "Enterprise System"
-    kind: SoftwareSystem
+  - id: ent-customer-portal
+    name: "Customer Portal"
+    kind: Application
     plane: software
-    layer: software-logical
-relationships: []
+    layer: experience
+  - id: ent-crm
+    name: "CRM"
+    kind: BusinessApplication
+    plane: enterprise
+    layer: application
+  - id: ent-identity
+    name: "Identity Provider"
+    kind: PlatformService
+    plane: platform
+    layer: shared-services
+  - id: ent-customer-capability
+    name: "Customer Management Capability"
+    kind: Capability
+    plane: enterprise
+    layer: business
+relationships:
+  - id: rel-portal-crm
+    source: ent-customer-portal
+    target: ent-crm
+    kind: reads-writes
+    mode: sync
+    protocol: https
+  - id: rel-portal-identity
+    source: ent-customer-portal
+    target: ent-identity
+    kind: authenticates-with
+    mode: sync
+    protocol: oidc
+  - id: rel-crm-capability
+    source: ent-crm
+    target: ent-customer-capability
+    kind: realizes
+    mode: static
+    protocol: none
+views:
+  - id: view-enterprise-capability
+    name: "Customer capability support"
+    includes: [ent-customer-portal, ent-crm, ent-identity, ent-customer-capability, rel-portal-crm, rel-portal-identity, rel-crm-capability]
+source_maps:
+  - source_file: system.takg.yaml
+    source_path: $.entities[3]
+    compiled_object: ent-customer-capability
+    transform_stage: lower
 validation:
-  status: example
+  diagnostics: []
+  loss_reports: []

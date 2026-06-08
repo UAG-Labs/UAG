@@ -1,15 +1,58 @@
 uagl:
   spec_version: "0.4.0"
   package_id: "low-level-os-driver"
+  namespace: "examples.low_level_driver"
   name: "Low-Level OS Driver"
-ontology:
-  dialects: [core]
+  dialects: [core, low-level-draft]
 entities:
-  - id: ent-example-system
-    name: "Low-Level OS Driver"
-    kind: SoftwareSystem
+  - id: ent-driver
+    name: "Storage Driver"
+    kind: KernelDriver
     plane: software
-    layer: software-logical
-relationships: []
+    layer: kernel
+  - id: ent-kernel
+    name: "Kernel IO Subsystem"
+    kind: KernelSubsystem
+    plane: software
+    layer: kernel
+  - id: ent-device
+    name: "NVMe Controller"
+    kind: HardwareDevice
+    plane: hardware
+    layer: device
+  - id: ent-dma-region
+    name: "DMA Buffer Region"
+    kind: MemoryRegion
+    plane: hardware
+    layer: memory
+relationships:
+  - id: rel-kernel-driver
+    source: ent-kernel
+    target: ent-driver
+    kind: calls
+    mode: sync
+    protocol: kernel_api
+  - id: rel-driver-device
+    source: ent-driver
+    target: ent-device
+    kind: controls
+    mode: sync
+    protocol: pcie_mmio
+  - id: rel-device-dma
+    source: ent-device
+    target: ent-dma-region
+    kind: reads-writes
+    mode: async
+    protocol: dma
+views:
+  - id: view-driver-runtime
+    name: "Driver runtime path"
+    includes: [flow-read-block, rel-kernel-driver, rel-driver-device, rel-device-dma]
+source_maps:
+  - source_file: system.takg.yaml
+    source_path: $.relationships[2]
+    compiled_object: rel-device-dma
+    transform_stage: lower
 validation:
-  status: example
+  diagnostics: []
+  loss_reports: []

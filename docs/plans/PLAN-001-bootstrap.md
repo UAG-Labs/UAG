@@ -1,7 +1,7 @@
-# Plan: PLAN-001 — Bootstrap `UAG`
+# Plan: PLAN-001 - Bootstrap `UAG`
 
-**Status:** Draft  
-**Derived From:** ../specs/README.md  
+**Status:** Draft
+**Derived From:** ../specs/README.md
 **Derivation Status:** Current
 
 ## Objective
@@ -14,6 +14,15 @@ Create the initial implementation skeleton exactly as defined in `../REPOSITORY_
 - ../architecture.md
 - ../REPOSITORY_STRUCTURE.md
 - ../specs/README.md
+
+## Architecture Graph Hardening
+Before implementation proceeds beyond bootstrap, the root repo must keep the graph contract honest:
+
+1. Maintain canonical examples with non-empty entities, relationships, views, flows, and layouts.
+2. Track TAKG and UAGL compatibility expectations against `UAG-core` schemas.
+3. Require source-map, deterministic-output, package/import, security-policy, and loss-report coverage in downstream implementation plans.
+4. Keep runtime observations, dependency provenance, and generated artifacts attached by reference instead of mixing them into editable TAKG intent.
+5. Treat any new dialect or exporter as incomplete until it declares what semantics it preserves and what it loses.
 
 ## Steps
 1. Create the root files and folders defined in `../REPOSITORY_STRUCTURE.md`.

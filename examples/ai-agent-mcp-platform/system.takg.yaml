@@ -1,12 +1,113 @@
 takg:
   spec_version: "0.4.0"
   package_id: "ai-agent-mcp-platform"
+  namespace: "examples.ai_agent_mcp"
   name: "AI Agent MCP Platform"
+dialects:
+  - core
+  - ai-agent-draft
+policy:
+  classification_defaults:
+    entity: internal
+    relationship: internal
+  secret_reference_schemes: ["vault://", "env://"]
 entities:
-  - id: ent-example-system
-    name: "AI Agent MCP Platform"
-    kind: SoftwareSystem
+  - id: ent-agent-orchestrator
+    name: "Agent Orchestrator"
+    kind: Service
     plane: software
-    layer: software-logical
-relationships: []
-views: []
+    layer: application
+    owner: platform
+    lifecycle: draft
+    classification: internal
+  - id: ent-model-gateway
+    name: "Model Gateway"
+    kind: Service
+    plane: software
+    layer: application
+    owner: platform
+    classification: restricted
+  - id: ent-tool-registry
+    name: "Tool Registry"
+    kind: Registry
+    plane: software
+    layer: application
+    owner: platform
+  - id: ent-filesystem-tool
+    name: "Filesystem MCP Tool"
+    kind: Tool
+    plane: software
+    layer: integration
+    classification: restricted
+boundaries:
+  - id: bnd-user-trust
+    name: "User Workspace Trust Boundary"
+    kind: TrustBoundary
+    contains: [ent-agent-orchestrator, ent-filesystem-tool]
+surfaces:
+  - id: srf-agent-api
+    entity: ent-agent-orchestrator
+    kind: HttpApi
+    protocol: https
+operations:
+  - id: op-run-task
+    surface: srf-agent-api
+    name: "Run task"
+    method: POST
+contracts:
+  - id: con-run-task
+    operation: op-run-task
+    request_schema: schema-agent-task
+    response_schema: schema-agent-result
+relationships:
+  - id: rel-agent-model
+    source: ent-agent-orchestrator
+    target: ent-model-gateway
+    kind: invokes
+    direction: outbound
+    mode: sync
+    protocol: https
+    cardinality: many-to-one
+    data: [prompt, tool_results]
+    auth: workload_identity
+    failure_behavior: retry_with_budget
+  - id: rel-agent-tools
+    source: ent-agent-orchestrator
+    target: ent-tool-registry
+    kind: discovers
+    direction: outbound
+    mode: sync
+    protocol: mcp
+    cardinality: many-to-one
+    data: [tool_manifest]
+    auth: signed_manifest
+    failure_behavior: fail_closed
+  - id: rel-agent-filesystem
+    source: ent-agent-orchestrator
+    target: ent-filesystem-tool
+    kind: invokes
+    direction: outbound
+    mode: sync
+    protocol: mcp
+    cardinality: many-to-one
+    data: [workspace_file_reference]
+    auth: user_grant
+    failure_behavior: require_human_approval
+flows:
+  - id: flow-agent-task
+    name: "Agent task execution"
+    steps: [op-run-task, rel-agent-tools, rel-agent-model, rel-agent-filesystem]
+views:
+  - id: view-agent-context
+    name: "Agent platform context"
+    kind: system-context
+    filter:
+      include:
+        entities: [ent-agent-orchestrator, ent-model-gateway, ent-tool-registry, ent-filesystem-tool]
+        relationships: [rel-agent-model, rel-agent-tools, rel-agent-filesystem]
+layouts:
+  view-agent-context:
+    ent-agent-orchestrator: { x: 0, y: 0 }
+    ent-model-gateway: { x: 360, y: -120 }
+    ent-tool-registry: { x: 360, y: 80 }
+    ent-filesystem-tool: { x: 720, y: 80 }

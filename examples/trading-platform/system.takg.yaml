@@ -1,12 +1,124 @@
 takg:
   spec_version: "0.4.0"
   package_id: "trading-platform"
+  namespace: "examples.trading"
   name: "Trading Platform"
+dialects:
+  - core
+  - event-systems-draft
+policy:
+  classification_defaults:
+    entity: confidential
+    relationship: confidential
 entities:
-  - id: ent-example-system
-    name: "Trading Platform"
-    kind: SoftwareSystem
+  - id: ent-order-api
+    name: "Order API"
+    kind: Service
     plane: software
-    layer: software-logical
-relationships: []
-views: []
+    layer: application
+    owner: trading
+  - id: ent-risk-engine
+    name: "Risk Engine"
+    kind: Service
+    plane: software
+    layer: domain
+    owner: risk
+  - id: ent-market-data
+    name: "Market Data Stream"
+    kind: EventStream
+    plane: data
+    layer: integration
+    owner: market-data
+  - id: ent-order-book
+    name: "Order Book"
+    kind: DataStore
+    plane: data
+    layer: persistence
+    owner: trading
+  - id: ent-exchange-gateway
+    name: "Exchange Gateway"
+    kind: ExternalSystem
+    plane: software
+    layer: integration
+boundaries:
+  - id: bnd-exchange
+    name: "External Exchange Boundary"
+    kind: TrustBoundary
+    contains: [ent-exchange-gateway]
+surfaces:
+  - id: srf-order-api
+    entity: ent-order-api
+    kind: HttpApi
+    protocol: https
+operations:
+  - id: op-place-order
+    surface: srf-order-api
+    name: "Place order"
+    method: POST
+contracts:
+  - id: con-place-order
+    operation: op-place-order
+    request_schema: schema-place-order
+    response_schema: schema-order-accepted
+relationships:
+  - id: rel-order-risk
+    source: ent-order-api
+    target: ent-risk-engine
+    kind: validates
+    direction: outbound
+    mode: sync
+    protocol: grpc
+    cardinality: many-to-one
+    data: [order_intent, risk_decision]
+    auth: service_identity
+    failure_behavior: reject_order
+  - id: rel-risk-market-data
+    source: ent-risk-engine
+    target: ent-market-data
+    kind: subscribes
+    direction: inbound
+    mode: async
+    protocol: kafka
+    cardinality: many-to-one
+    data: [price_tick]
+    auth: broker_acl
+    failure_behavior: halt_trading_on_stale_data
+  - id: rel-order-book
+    source: ent-order-api
+    target: ent-order-book
+    kind: writes
+    direction: outbound
+    mode: sync
+    protocol: postgres
+    cardinality: many-to-one
+    data: [accepted_order]
+    auth: database_role
+    failure_behavior: transactional_rollback
+  - id: rel-exchange-submit
+    source: ent-order-api
+    target: ent-exchange-gateway
+    kind: submits
+    direction: outbound
+    mode: async
+    protocol: fix
+    cardinality: many-to-one
+    data: [exchange_order]
+    auth: mutual_tls
+    failure_behavior: queue_and_reconcile
+flows:
+  - id: flow-place-order
+    name: "Place and route order"
+    steps: [op-place-order, rel-order-risk, rel-order-book, rel-exchange-submit]
+views:
+  - id: view-order-flow
+    name: "Order flow"
+    kind: dynamic
+    filter:
+      include:
+        flows: [flow-place-order]
+layouts:
+  view-order-flow:
+    ent-order-api: { x: 0, y: 0 }
+    ent-risk-engine: { x: 320, y: -120 }
+    ent-order-book: { x: 320, y: 120 }
+    ent-exchange-gateway: { x: 680, y: 0 }

@@ -1,12 +1,95 @@
 takg:
   spec_version: "0.4.0"
   package_id: "enterprise-system"
+  namespace: "examples.enterprise"
   name: "Enterprise System"
+dialects:
+  - core
+  - enterprise-draft
+policy:
+  classification_defaults:
+    entity: internal
+    relationship: internal
 entities:
-  - id: ent-example-system
-    name: "Enterprise System"
-    kind: SoftwareSystem
+  - id: ent-customer-portal
+    name: "Customer Portal"
+    kind: Application
     plane: software
-    layer: software-logical
-relationships: []
-views: []
+    layer: experience
+    owner: digital
+  - id: ent-crm
+    name: "CRM"
+    kind: BusinessApplication
+    plane: enterprise
+    layer: application
+    owner: sales-ops
+  - id: ent-identity
+    name: "Identity Provider"
+    kind: PlatformService
+    plane: platform
+    layer: shared-services
+    owner: security
+  - id: ent-customer-capability
+    name: "Customer Management Capability"
+    kind: Capability
+    plane: enterprise
+    layer: business
+    owner: sales
+boundaries:
+  - id: bnd-customer-data
+    name: "Customer Data Boundary"
+    kind: DataBoundary
+    contains: [ent-crm]
+surfaces:
+  - id: srf-portal-api
+    entity: ent-customer-portal
+    kind: HttpApi
+    protocol: https
+relationships:
+  - id: rel-portal-crm
+    source: ent-customer-portal
+    target: ent-crm
+    kind: reads-writes
+    direction: outbound
+    mode: sync
+    protocol: https
+    cardinality: many-to-one
+    data: [customer_profile]
+    auth: oauth2_client_credentials
+    failure_behavior: show_degraded_profile
+  - id: rel-portal-identity
+    source: ent-customer-portal
+    target: ent-identity
+    kind: authenticates-with
+    direction: outbound
+    mode: sync
+    protocol: oidc
+    cardinality: many-to-one
+    data: [identity_token]
+    auth: oidc
+    failure_behavior: deny_access
+  - id: rel-crm-capability
+    source: ent-crm
+    target: ent-customer-capability
+    kind: realizes
+    direction: outbound
+    mode: static
+    protocol: none
+    cardinality: many-to-one
+    data: [capability_support]
+    auth: governance_control
+    failure_behavior: architecture_review
+views:
+  - id: view-enterprise-capability
+    name: "Customer capability support"
+    kind: capability
+    filter:
+      include:
+        entities: [ent-customer-portal, ent-crm, ent-identity, ent-customer-capability]
+        relationships: [rel-portal-crm, rel-portal-identity, rel-crm-capability]
+layouts:
+  view-enterprise-capability:
+    ent-customer-capability: { x: 0, y: 0 }
+    ent-crm: { x: 360, y: 0 }
+    ent-customer-portal: { x: 720, y: -100 }
+    ent-identity: { x: 720, y: 120 }

@@ -1,12 +1,91 @@
 takg:
   spec_version: "0.4.0"
   package_id: "low-level-os-driver"
+  namespace: "examples.low_level_driver"
   name: "Low-Level OS Driver"
+dialects:
+  - core
+  - low-level-draft
+policy:
+  classification_defaults:
+    entity: internal
+    relationship: internal
 entities:
-  - id: ent-example-system
-    name: "Low-Level OS Driver"
-    kind: SoftwareSystem
+  - id: ent-driver
+    name: "Storage Driver"
+    kind: KernelDriver
     plane: software
-    layer: software-logical
-relationships: []
-views: []
+    layer: kernel
+    owner: platform
+  - id: ent-kernel
+    name: "Kernel IO Subsystem"
+    kind: KernelSubsystem
+    plane: software
+    layer: kernel
+  - id: ent-device
+    name: "NVMe Controller"
+    kind: HardwareDevice
+    plane: hardware
+    layer: device
+  - id: ent-dma-region
+    name: "DMA Buffer Region"
+    kind: MemoryRegion
+    plane: hardware
+    layer: memory
+    classification: restricted
+boundaries:
+  - id: bnd-privilege
+    name: "Kernel Privilege Boundary"
+    kind: PrivilegeBoundary
+    contains: [ent-driver, ent-kernel]
+relationships:
+  - id: rel-kernel-driver
+    source: ent-kernel
+    target: ent-driver
+    kind: calls
+    direction: outbound
+    mode: sync
+    protocol: kernel_api
+    cardinality: one-to-one
+    data: [io_request]
+    auth: kernel_capability
+    failure_behavior: return_errno
+  - id: rel-driver-device
+    source: ent-driver
+    target: ent-device
+    kind: controls
+    direction: outbound
+    mode: sync
+    protocol: pcie_mmio
+    cardinality: one-to-one
+    data: [command_queue]
+    auth: privileged_io
+    failure_behavior: reset_controller
+  - id: rel-device-dma
+    source: ent-device
+    target: ent-dma-region
+    kind: reads-writes
+    direction: bidirectional
+    mode: async
+    protocol: dma
+    cardinality: one-to-many
+    data: [block_buffer]
+    auth: iommu_mapping
+    failure_behavior: revoke_mapping
+flows:
+  - id: flow-read-block
+    name: "Read block"
+    steps: [rel-kernel-driver, rel-driver-device, rel-device-dma]
+views:
+  - id: view-driver-runtime
+    name: "Driver runtime path"
+    kind: runtime
+    filter:
+      include:
+        flows: [flow-read-block]
+layouts:
+  view-driver-runtime:
+    ent-kernel: { x: 0, y: 0 }
+    ent-driver: { x: 320, y: 0 }
+    ent-device: { x: 640, y: -80 }
+    ent-dma-region: { x: 640, y: 120 }

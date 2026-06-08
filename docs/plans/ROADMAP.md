@@ -1,16 +1,19 @@
-# Roadmap — `UAG`
+# Roadmap - `UAG`
 
-## Phase 0 — Documentation Bootstrap
-Commit this documentation package.
+## Phase 1 - Language Contract Finalization
+See [PLAN-101](./PLAN-101-language-contract-finalization.md).
 
-## Phase 1 — Skeleton
-Create the file/folder skeleton exactly as defined in `docs/REPOSITORY_STRUCTURE.md`.
+## Phase 2 - Canonical Fixture Suite
+See [PLAN-102](./PLAN-102-canonical-fixture-suite.md).
 
-## Phase 2 — First Functional Slice
-Implement the smallest vertical slice that satisfies the first system spec.
+## Phase 3 - Compatibility and Release Governance
+See [PLAN-103](./PLAN-103-compatibility-release-governance.md).
 
-## Phase 3 — Validation
-Add tests for the acceptance criteria.
+## Phase 4 - Documentation System
+See [PLAN-104](./PLAN-104-documentation-system.md).
 
-## Phase 4 — Cross-Repo Alignment
-Confirm this repo still obeys the dependency boundary defined in `ADR-0001`.
+## Phase 5 - Ecosystem Acceptance
+See [PLAN-105](./PLAN-105-ecosystem-acceptance.md).
+
+## Final State
+The final state is defined in [PLAN-100](./PLAN-100-long-term-implementation.md).
