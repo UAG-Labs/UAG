@@ -173,9 +173,25 @@ Impacts: All repositories, PR workflow, release readiness.
 Decision needed before: First implementation PRs.
 Resolution evidence: [ADR-0002 Implementation Readiness Decisions](./adr/ADR-0002-implementation-readiness-decisions.md)
 
+## Q-011 - Should source code compilation targets live in `UAG-compiler` or a separate repo?
+Status: Resolved
+Raised by: Direction change to graph-native architecture compiler platform with real code generation targets (Rust, TypeScript, C, React).
+Question: Should the code generation backends (Rust emitter, TypeScript emitter, C emitter, React emitter) live inside `UAG-compiler`, or should they be extracted into a separate `UAG-codegen` repository?
+Why it matters: Code generation is now a first-class output alongside diagrams and docs. If it grows substantially it could become a maintenance burden inside one repo, but splitting too early creates cross-repo versioning overhead.
+Options:
+- Keep codegen inside `UAG-compiler` as a `codegen/` module with per-language emitters.
+- Create a separate `UAG-codegen` repo from the start.
+- Keep codegen in `UAG-compiler` now, with a documented extraction criteria for later.
+AI recommendation: Keep code generation in `UAG-compiler` as a `codegen/` module. The codegen step is the backend of the same pipeline — UAGL goes in, code comes out. A separate repo only makes sense when: (a) there are 5+ language targets with independent contributors, (b) each target has its own release cycle, or (c) build/test infrastructure per language becomes independently heavy.
+Decision: Keep code generation in `UAG-compiler` with a `codegen/` module housing per-language emitters. Extract to a separate repo only when the independence criteria above are met.
+Impacts: `UAG-compiler` module structure, release planning, versioning strategy.
+Decision needed before: First compiler implementation plan.
+Resolution evidence: Direction change to compiler platform identity, June 2026.
+
 ## Resolved Initialization Decisions
 - R-001: Repos are `UAG`, `UAG-core`, `UAG-compiler`, and `UAG-studio`.
 - R-002: Rust is used for system-level implementation.
 - R-003: React + TypeScript are used for Studio frontend.
 - R-004: TAKG is editable source; UAGL is compiled IR.
 - R-005: All specs follow fixed `TYPE-NNN-name.md` naming and seven-section format.
+- R-006: Code generation targets (Rust, TypeScript, C, React) are first-class compiler outputs, housed in `UAG-compiler` under a `codegen/` module.
