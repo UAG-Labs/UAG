@@ -23,7 +23,11 @@ Markdown, YAML, and example artifacts. No Rust/React implementation belongs here
 Does not depend on sibling repos. It documents them.
 
 ## Expected Output
-Complete source-of-truth documentation and example TAKG/UAGL systems covering the full graph primitive set: nodes, edges, events, capabilities, resources, constraints, and goals. Examples must demonstrate compilation targets (Rust, TypeScript, React, C), not only diagram and doc projections.
+Complete source-of-truth documentation and example TAKG/UAGL systems covering:
+- all graph primitive types: nodes, edges, events, capabilities, resources, constraints, goals
+- all behavior layers: state machines, predicates, effects, transformations, holes
+- compilation targets: Rust, TypeScript, React, C — not only diagram and doc projections
+- platform adapter model and policy engine concepts
 
 ## Working Instructions
 1. Read `README.md`, `docs/architecture.md`, `docs/artifact.md`, `docs/REPOSITORY_STRUCTURE.md`, and `docs/specs/README.md` before implementation.
